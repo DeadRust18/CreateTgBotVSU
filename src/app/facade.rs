@@ -25,13 +25,16 @@ use sqlx::PgPool;
 pub async fn run_app(config: AppConfig, pool: PgPool) {
     // Создаём фасад базы данных, передавая ему пул соединений.
     // Теперь все операции с БД будут идти через этот фасад.
+    log::info!("Создаём DbFacade...");
     let db_facade = DbFacade::new(pool);
 
     // Инициализируем Telegram-бота, используя токен из конфигурации.
     // clone() нужен, потому что токен — это строка, и мы передаём её в новый объект.
+    log::info!("Инициализируем Telegram-бота...");
     let bot = teloxide::Bot::new(config.bot_token.clone());
 
     run_telegram_bot(bot, db_facade).await;
+    log::info!("Telegram-бот завершил работу.");
 }
 
 // Запускаем Telegram-сервис, передавая
