@@ -1,5 +1,3 @@
-// src/db/students_repo.rs
-
 use sqlx::PgPool;
 use log::{info, debug, error};
 use crate::domain::student::Student;
@@ -10,7 +8,7 @@ pub async fn find_by_telegram_id(pool: &PgPool, telegram_id: i64) -> anyhow::Res
 
     let row = sqlx::query!(
         r#"
-        SELECT id, telegram_id, faculty, group_name, created_at
+        SELECT id, telegram_id, faculty, group_name, study_form, created_at
         FROM students
         WHERE telegram_id = $1
         "#,
@@ -27,6 +25,7 @@ pub async fn find_by_telegram_id(pool: &PgPool, telegram_id: i64) -> anyhow::Res
                 telegram_id: r.telegram_id,
                 faculty: r.faculty,
                 group_name: r.group_name,
+                study_form: r.study_form,
                 created_at: r.created_at,
             }))
         }
@@ -42,21 +41,28 @@ pub async fn find_by_telegram_id(pool: &PgPool, telegram_id: i64) -> anyhow::Res
 }
 
 /// Добавить нового студента
-pub async fn insert(pool: &PgPool, telegram_id: i64, faculty: &str, group_name: &str) -> anyhow::Result<Student> {
+pub async fn insert(
+    pool: &PgPool,
+    telegram_id: i64,
+    faculty: &str,
+    group_name: &str,
+    study_form: &str,
+) -> anyhow::Result<Student> {
     info!(
-        "Регистрация нового студента: telegram_id={}, faculty={}, group={}",
-        telegram_id, faculty, group_name
+        "Регистрация нового студента: telegram_id={}, faculty={}, group={}, study_form={}",
+        telegram_id, faculty, group_name, study_form
     );
 
     let res = sqlx::query!(
         r#"
-        INSERT INTO students (telegram_id, faculty, group_name)
-        VALUES ($1, $2, $3)
-        RETURNING id, telegram_id, faculty, group_name, created_at
+        INSERT INTO students (telegram_id, faculty, group_name, study_form)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, telegram_id, faculty, group_name, study_form, created_at
         "#,
         telegram_id,
         faculty,
-        group_name
+        group_name,
+        study_form
     )
         .fetch_one(pool)
         .await;
@@ -69,6 +75,7 @@ pub async fn insert(pool: &PgPool, telegram_id: i64, faculty: &str, group_name: 
                 telegram_id: r.telegram_id,
                 faculty: r.faculty,
                 group_name: r.group_name,
+                study_form: r.study_form,
                 created_at: r.created_at,
             })
         }
@@ -79,20 +86,27 @@ pub async fn insert(pool: &PgPool, telegram_id: i64, faculty: &str, group_name: 
     }
 }
 
-/// Обновить данные студента (факультет и группу)
-pub async fn update(pool: &PgPool, telegram_id: i64, faculty: &str, group_name: &str) -> anyhow::Result<Option<Student>> {
+/// Обновить данные студента (факультет, группа, форма обучения)
+pub async fn update(
+    pool: &PgPool,
+    telegram_id: i64,
+    faculty: &str,
+    group_name: &str,
+    study_form: &str,
+) -> anyhow::Result<Option<Student>> {
     info!("Обновление студента telegram_id={}", telegram_id);
 
     let res = sqlx::query!(
         r#"
         UPDATE students
-        SET faculty = $2, group_name = $3
+        SET faculty = $2, group_name = $3, study_form = $4
         WHERE telegram_id = $1
-        RETURNING id, telegram_id, faculty, group_name, created_at
+        RETURNING id, telegram_id, faculty, group_name, study_form, created_at
         "#,
         telegram_id,
         faculty,
-        group_name
+        group_name,
+        study_form
     )
         .fetch_optional(pool)
         .await;
@@ -105,6 +119,7 @@ pub async fn update(pool: &PgPool, telegram_id: i64, faculty: &str, group_name: 
                 telegram_id: r.telegram_id,
                 faculty: r.faculty,
                 group_name: r.group_name,
+                study_form: r.study_form,
                 created_at: r.created_at,
             }))
         }

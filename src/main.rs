@@ -1,3 +1,4 @@
+//src/main.rs
 pub mod config;
 pub mod db;
 pub mod domain;

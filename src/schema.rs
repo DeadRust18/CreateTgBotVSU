@@ -20,6 +20,7 @@ diesel::table! {
         faculty -> Text,
         group_name -> Text,
         created_at -> Timestamptz,
+        study_form -> Text,
     }
 }
 

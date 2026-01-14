@@ -1,5 +1,7 @@
+//src/services/telegram/mod.rs
 pub mod handlers;
 pub mod keyboards;
+pub mod registration;
 
 use teloxide::prelude::*;
 use crate::db::facade::DbFacade;

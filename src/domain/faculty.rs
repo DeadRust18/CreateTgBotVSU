@@ -1,3 +1,4 @@
+//src/domain/faculty.rs
 use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,3 +1,4 @@
+//src/domain/student.rs
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
@@ -7,5 +8,6 @@ pub struct Student {
     pub telegram_id: i64,
     pub faculty: String,
     pub group_name: String,
+    pub study_form: String,
     pub created_at: DateTime<Utc>,
 }
