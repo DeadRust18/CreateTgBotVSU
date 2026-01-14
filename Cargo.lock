@@ -27,6 +27,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.100"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
+
+[[package]]
 name = "aquamarine"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2473,6 +2479,7 @@ dependencies = [
  "base64",
  "bytes",
  "cfg-if",
+ "chrono",
  "crc",
  "crossbeam-queue",
  "either",
@@ -2486,14 +2493,18 @@ dependencies = [
  "indexmap 2.13.0",
  "log",
  "memchr",
+ "native-tls",
  "percent-encoding",
  "serde",
  "serde_json",
  "sha2",
  "smallvec",
  "thiserror",
+ "tokio",
+ "tokio-stream",
  "tracing",
  "url",
+ "uuid",
 ]
 
 [[package]]
@@ -2568,6 +2579,7 @@ dependencies = [
  "sqlx-sqlite 0.9.0-alpha.1",
  "syn",
  "thiserror",
+ "tokio",
  "url",
 ]
 
@@ -2582,6 +2594,7 @@ dependencies = [
  "bitflags",
  "byteorder",
  "bytes",
+ "chrono",
  "crc",
  "digest",
  "dotenvy",
@@ -2609,6 +2622,7 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -2659,6 +2673,7 @@ dependencies = [
  "base64",
  "bitflags",
  "byteorder",
+ "chrono",
  "crc",
  "dotenvy",
  "etcetera 0.10.0",
@@ -2682,6 +2697,7 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -2716,6 +2732,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe2cd6cee87120b1e1dd31356b5589911995c777707e49f2750eec7c7fe43eef"
 dependencies = [
  "atoi",
+ "chrono",
  "flume",
  "futures-channel",
  "futures-core",
@@ -2731,6 +2748,7 @@ dependencies = [
  "thiserror",
  "tracing",
  "url",
+ "uuid",
 ]
 
 [[package]]
@@ -2924,6 +2942,7 @@ dependencies = [
 name = "tg_bot_vsu"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "diesel",
  "dotenvy",

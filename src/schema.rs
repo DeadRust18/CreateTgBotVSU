@@ -19,7 +19,7 @@ diesel::table! {
         telegram_id -> Int8,
         faculty -> Text,
         group_name -> Text,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
     }
 }
 

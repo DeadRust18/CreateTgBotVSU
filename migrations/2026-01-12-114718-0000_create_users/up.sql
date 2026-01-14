@@ -6,5 +6,5 @@ CREATE TABLE users (
                        telegram_id BIGINT NOT NULL UNIQUE,
                        faculty TEXT NOT NULL,
                        group_name TEXT NOT NULL,
-                       created_at TIMESTAMP NOT NULL DEFAULT NOW()
+                       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
