@@ -14,7 +14,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    users (id) {
+    students (id) {
         id -> Uuid,
         telegram_id -> Int8,
         faculty -> Text,
@@ -23,4 +23,4 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(schedule_lessons, users,);
+diesel::allow_tables_to_appear_in_same_query!(schedule_lessons, students,);

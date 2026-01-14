@@ -1,90 +1,146 @@
 // src/db/students_repo.rs
 
-// Подключаем библиотеку для работы с базой данных PostgreSQL через пул соединений.
-// "Пул" — это как очередь готовых подключений к базе, чтобы не открывать новое каждый раз.
 use sqlx::PgPool;
-use log::{info, debug};
-
-// Подключаем нашу структуру Student, которая описывает студента в коде.
+use log::{info, debug, error};
 use crate::domain::student::Student;
 
-/// Функция ищет студента по его Telegram ID.
-/// Представь: у каждого студента есть свой "номер" в Telegram, и мы хотим найти его запись в базе.
-///
-/// - `pool`: это "пул соединений" с базой данных.
-/// - `telegram_id`: номер студента в Telegram.
-/// Возвращает либо найденного студента, либо `None` (если такого нет).
+/// Найти студента по Telegram ID
 pub async fn find_by_telegram_id(pool: &PgPool, telegram_id: i64) -> anyhow::Result<Option<Student>> {
     debug!("Запрос на поиск студента с telegram_id={}", telegram_id);
 
-    // Делаем SQL-запрос: ищем строку в таблице "users", где колонка telegram_id равна нашему значению.
     let row = sqlx::query!(
         r#"
         SELECT id, telegram_id, faculty, group_name, created_at
-        FROM users
+        FROM students
         WHERE telegram_id = $1
         "#,
-        telegram_id // ← сюда подставляется значение из аргумента функции
+        telegram_id
     )
-        // fetch_optional значит: либо вернётся строка, либо ничего (None).
         .fetch_optional(pool)
-        .await?; // здесь Result уже распакован, остаётся Option
+        .await;
 
-    // Если строка найдена, превращаем её в структуру Student.
-    // Если нет — вернётся None.
-    if let Some(r) = &row {
-        info!("Студент найден: id={}, telegram_id={}", r.id, r.telegram_id);
-    } else {
-        info!("Студент с telegram_id={} не найден.", telegram_id);
+    match row {
+        Ok(Some(r)) => {
+            info!("Студент найден: id={}, telegram_id={}", r.id, r.telegram_id);
+            Ok(Some(Student {
+                id: r.id,
+                telegram_id: r.telegram_id,
+                faculty: r.faculty,
+                group_name: r.group_name,
+                created_at: r.created_at,
+            }))
+        }
+        Ok(None) => {
+            info!("Студент с telegram_id={} не найден.", telegram_id);
+            Ok(None)
+        }
+        Err(e) => {
+            error!("Ошибка при поиске студента: {:?}", e);
+            Err(e.into())
+        }
     }
-
-    Ok(row.map(|r| Student {
-        id: r.id,                 // уникальный идентификатор (UUID)
-        telegram_id: r.telegram_id, // номер в Telegram
-        faculty: r.faculty,       // факультет
-        group_name: r.group_name, // название группы
-        created_at: r.created_at, // дата и время создания записи
-    }))
 }
 
-/// Функция добавляет нового студента в базу.
-/// Представь: студент только что пришёл, и мы записываем его данные.
-///
-/// - `pool`: пул соединений с базой.
-/// - `telegram_id`: номер студента в Telegram.
-/// - `faculty`: факультет.
-/// - `group_name`: название группы.
-/// Возвращает созданного студента (с уже присвоенным ID и временем создания).
+/// Добавить нового студента
 pub async fn insert(pool: &PgPool, telegram_id: i64, faculty: &str, group_name: &str) -> anyhow::Result<Student> {
     info!(
         "Регистрация нового студента: telegram_id={}, faculty={}, group={}",
         telegram_id, faculty, group_name
     );
 
-    // Делаем SQL-запрос: вставляем новую строку в таблицу "users".
-    // RETURNING значит: сразу вернуть все нужные поля новой записи.
-    let r = sqlx::query!(
+    let res = sqlx::query!(
         r#"
-        INSERT INTO users (telegram_id, faculty, group_name)
+        INSERT INTO students (telegram_id, faculty, group_name)
         VALUES ($1, $2, $3)
         RETURNING id, telegram_id, faculty, group_name, created_at
         "#,
-        telegram_id, // ← номер в Telegram
-        faculty,     // ← факультет
-        group_name   // ← группа
+        telegram_id,
+        faculty,
+        group_name
     )
-        // fetch_one значит: мы точно ожидаем одну строку (нового студента).
         .fetch_one(pool)
-        .await?; // здесь Result уже распакован, остаётся Record
+        .await;
 
-    info!("Студент успешно добавлен: id={}, telegram_id={}", r.id, r.telegram_id);
+    match res {
+        Ok(r) => {
+            info!("Студент успешно добавлен: id={}, telegram_id={}", r.id, r.telegram_id);
+            Ok(Student {
+                id: r.id,
+                telegram_id: r.telegram_id,
+                faculty: r.faculty,
+                group_name: r.group_name,
+                created_at: r.created_at,
+            })
+        }
+        Err(e) => {
+            error!("Ошибка при добавлении студента: {:?}", e);
+            Err(e.into())
+        }
+    }
+}
 
-    // Превращаем результат запроса в структуру Student.
-    Ok(Student {
-        id: r.id,                 // уникальный идентификатор (UUID)
-        telegram_id: r.telegram_id, // номер в Telegram
-        faculty: r.faculty,       // факультет
-        group_name: r.group_name, // группа
-        created_at: r.created_at, // дата и время создания записи
-    })
+/// Обновить данные студента (факультет и группу)
+pub async fn update(pool: &PgPool, telegram_id: i64, faculty: &str, group_name: &str) -> anyhow::Result<Option<Student>> {
+    info!("Обновление студента telegram_id={}", telegram_id);
+
+    let res = sqlx::query!(
+        r#"
+        UPDATE students
+        SET faculty = $2, group_name = $3
+        WHERE telegram_id = $1
+        RETURNING id, telegram_id, faculty, group_name, created_at
+        "#,
+        telegram_id,
+        faculty,
+        group_name
+    )
+        .fetch_optional(pool)
+        .await;
+
+    match res {
+        Ok(Some(r)) => {
+            info!("Студент обновлён: id={}, telegram_id={}", r.id, r.telegram_id);
+            Ok(Some(Student {
+                id: r.id,
+                telegram_id: r.telegram_id,
+                faculty: r.faculty,
+                group_name: r.group_name,
+                created_at: r.created_at,
+            }))
+        }
+        Ok(None) => {
+            info!("Студент с telegram_id={} не найден для обновления.", telegram_id);
+            Ok(None)
+        }
+        Err(e) => {
+            error!("Ошибка при обновлении студента: {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
+/// Удалить студента по Telegram ID
+pub async fn delete(pool: &PgPool, telegram_id: i64) -> anyhow::Result<u64> {
+    info!("Удаление студента telegram_id={}", telegram_id);
+
+    let res = sqlx::query!(
+        r#"
+        DELETE FROM students
+        WHERE telegram_id = $1
+        "#,
+        telegram_id
+    )
+        .execute(pool)
+        .await;
+
+    match res {
+        Ok(result) => {
+            info!("Удалено {} записей.", result.rows_affected());
+            Ok(result.rows_affected())
+        }
+        Err(e) => {
+            error!("Ошибка при удалении студента: {:?}", e);
+            Err(e.into())
+        }
+    }
 }
