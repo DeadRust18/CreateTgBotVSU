@@ -1,6 +1,11 @@
 //src/services/telegram/mod.rs
 pub mod handlers;
 pub mod keyboards;
+pub mod menu;
+pub mod menu_dispatcher;
+pub mod menu_state_manager;
+pub mod menu_examples;
+pub mod callback_router;
 pub mod registration;
 
 use teloxide::prelude::*;

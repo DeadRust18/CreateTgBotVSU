@@ -1,5 +1,5 @@
 use crate::db::facade::DbFacade;
-use crate::domain::{faculty::Faculty, study_form::StudyForm, course::Course};
+use crate::domain::{study_form::StudyForm};
 use crate::domain::groups::mit::MitGroup;
 use std::sync::Arc;
 
@@ -17,7 +17,6 @@ impl RegistrationFacade {
         telegram_id: i64,
         group: MitGroup,
         form: StudyForm,
-        course: Course,
     ) -> anyhow::Result<()> {
         self.db.register_student(
             telegram_id,
@@ -28,3 +27,5 @@ impl RegistrationFacade {
         Ok(())
     }
 }
+
+

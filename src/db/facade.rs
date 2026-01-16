@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 use crate::domain::student::Student;
-use crate::db::students_repo;
+use crate::domain::user_state::UserState;
+use crate::db::{students_repo, user_states_repo};
 use log::{info, debug, error};
 
 /// DbFacade — фасад для работы с базой.
@@ -16,6 +17,8 @@ impl DbFacade {
         info!("Создан новый DbFacade с пулом соединений.");
         Self { pool }
     }
+
+    // ============= Студенты =============
 
     /// Найти студента по Telegram ID
     pub async fn find_student(&self, telegram_id: i64) -> anyhow::Result<Option<Student>> {
@@ -46,6 +49,8 @@ impl DbFacade {
                     "Студент с telegram_id={} успешно зарегистрирован (id={}).",
                     telegram_id, student.id
                 );
+                // Удаляем состояние после успешной регистрации
+                let _ = user_states_repo::delete(&self.pool, telegram_id).await;
                 Ok(student)
             }
             Err(e) => {
@@ -70,4 +75,33 @@ impl DbFacade {
     pub async fn delete_student(&self, telegram_id: i64) -> anyhow::Result<u64> {
         students_repo::delete(&self.pool, telegram_id).await
     }
+
+    // ============= Состояние пользователя =============
+
+    /// Найти состояние пользователя
+    pub async fn get_user_state(&self, telegram_id: i64) -> anyhow::Result<Option<UserState>> {
+        user_states_repo::find_by_telegram_id(&self.pool, telegram_id).await
+    }
+
+    /// Создать состояние пользователя (начало регистрации)
+    pub async fn create_user_state(&self, telegram_id: i64) -> anyhow::Result<UserState> {
+        user_states_repo::insert(&self.pool, telegram_id).await
+    }
+
+    /// Обновить факультет в состоянии
+    pub async fn set_user_faculty(&self, telegram_id: i64, faculty: &str) -> anyhow::Result<UserState> {
+        user_states_repo::update_faculty(&self.pool, telegram_id, faculty).await
+    }
+
+    /// Обновить форму обучения в состоянии
+    pub async fn set_user_study_form(&self, telegram_id: i64, form: &str) -> anyhow::Result<UserState> {
+        user_states_repo::update_study_form(&self.pool, telegram_id, form).await
+    }
+
+    /// Обновить курс в состоянии
+    pub async fn set_user_course(&self, telegram_id: i64, course: &str) -> anyhow::Result<UserState> {
+        user_states_repo::update_course(&self.pool, telegram_id, course).await
+    }
 }
+
+

@@ -2,6 +2,7 @@
 pub mod config;
 pub mod db;
 pub mod domain;
+pub mod errors;
 pub mod services;
 pub mod app;
 

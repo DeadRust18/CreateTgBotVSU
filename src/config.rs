@@ -1,25 +1,41 @@
-//src/config.rs
-use dotenvy::dotenv;
+// src/config.rs
+//! Конфигурация приложения
+
+use log::info;
 use std::env;
 
+/// Конфигурация приложения
+#[derive(Clone, Debug)]
 pub struct AppConfig {
+    /// Токен Telegram бота
     pub bot_token: String,
+    /// URL базы данных
     pub database_url: String,
-    //pub http_bind_address: String,
+    /// Логический уровень
+    pub log_level: String,
 }
 
 impl AppConfig {
-    // Загружаем конфигурацию приложения из переменных окружения
-    pub fn load_from_environment()-> Self{
-        dotenv().ok();
-        let bot_token = env::var("TELOXIDE_TOKEN").expect("TELOXIDE_TOKEN is not set");
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set");
-        //let http_bind_address = env::var("HTTP_BIND_ADDRESS").expect("HTTP_BIND_ADDRESS is not set");
+    /// Загрузить конфигурацию из переменных окружения
+    pub fn load_from_environment() -> Self {
+        dotenvy::dotenv().ok();
+
+        let bot_token = env::var("BOT_TOKEN")
+            .expect("Переменная окружения BOT_TOKEN не установлена");
+        let database_url = env::var("DATABASE_URL")
+            .expect("Переменная окружения DATABASE_URL не установлена");
+        let log_level = env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string());
+
+        info!(
+            "Конфигурация загружена: log_level={}, database_url={}",
+            log_level, database_url
+        );
 
         Self {
             bot_token,
             database_url,
-            //http_bind_address,
+            log_level,
         }
     }
 }
+
